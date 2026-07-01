@@ -1,5 +1,7 @@
 node_modules/
 .validator-venv/
+.tools/
+.chatgpt-tunnel/
 .env
 coverage/
 *.log

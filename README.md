@@ -42,13 +42,12 @@ ChatGPT cannot connect directly to a local stdio MCP server. Use OpenAI Secure M
 
 1. In ChatGPT, open **Settings → Apps → Advanced settings** and enable **Developer mode**.
 2. In OpenAI Platform tunnel settings, create a tunnel associated with the same ChatGPT workspace and obtain its `tunnel_id` and runtime API key.
-3. Download the official `openai/tunnel-client` release. Initialize a local stdio profile:
+3. Download the official `openai/tunnel-client` release to `.tools\bin\tunnel-client.exe`. This checkout includes setup and start scripts:
 
 ```powershell
 $env:CONTROL_PLANE_API_KEY="your-runtime-key"
-tunnel-client init --sample sample_mcp_stdio_local --profile med-research --tunnel-id tunnel_xxx --mcp-command "node C:\absolute\path\med-research-assistant\src\server.mjs"
-tunnel-client doctor --profile med-research --explain
-tunnel-client run --profile med-research
+.\scripts\setup-chatgpt-tunnel.ps1 -TunnelId tunnel_xxx
+.\scripts\start-chatgpt-tunnel.ps1
 ```
 
 4. Keep `tunnel-client run` active. In ChatGPT **Settings → Apps**, create an app named **Medical Literature Research**, choose **Tunnel** as the connection, and select that tunnel.
