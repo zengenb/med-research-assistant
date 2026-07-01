@@ -1,4 +1,4 @@
-import { requestJson } from "../lib/http.mjs";
+import { requestJson, requestText } from "../lib/http.mjs";
 import { cleanText, normalizeDoi, publicationYear } from "../lib/utils.mjs";
 
 const BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest";
@@ -56,4 +56,12 @@ export async function getEuropePmcArticle(identifier) {
   const query = isDoi ? `DOI:"${normalizeDoi(identifier)}"` : `EXT_ID:"${String(identifier).replace(/^PMID:/i, "")}"`;
   const results = await searchEuropePmc(query, { limit: 5 });
   return results[0] || null;
+}
+
+export async function getEuropePmcFullText(pmcid) {
+  const id = String(pmcid || "").trim().toUpperCase();
+  if (!/^PMC\d+$/.test(id)) return null;
+  const xml = await requestText(`${BASE}/${encodeURIComponent(id)}/fullTextXML`);
+  const body = xml.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] || xml;
+  return cleanText(body)?.slice(0, 120_000) || null;
 }

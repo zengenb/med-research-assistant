@@ -8,11 +8,19 @@ import { searchClinicalTrials } from "./sources/clinicaltrials.mjs";
 import { resolveOpenFullText } from "./sources/openaccess.mjs";
 import { chineseSearchPortals } from "./sources/chinese.mjs";
 import { normalizeDoi } from "./lib/utils.mjs";
+import { chatGptFetch, chatGptSearch } from "./chatgpt.mjs";
 
 const server = new McpServer({
-  name: "med-research",
-  version: "0.1.0",
+  name: "Medical Literature Research",
+  version: "0.2.0",
 });
+
+const READ_ONLY = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: true,
+};
 
 function response(value) {
   return {
@@ -20,6 +28,38 @@ function response(value) {
     structuredContent: value,
   };
 }
+
+server.registerTool("search", {
+  title: "Search medical literature for ChatGPT",
+  description: "Use this to search medical literature for ChatGPT chat, deep research, and company knowledge. Returns stable identifiers and canonical citation URLs.",
+  inputSchema: {
+    query: z.string().min(1).describe("Natural-language, Boolean, PICO, DOI, or subject query"),
+  },
+  outputSchema: {
+    results: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      url: z.string().url(),
+    })),
+  },
+  annotations: READ_ONLY,
+}, async ({ query }) => response(await chatGptSearch(query)));
+
+server.registerTool("fetch", {
+  title: "Read a medical literature result",
+  description: "Use this after search to retrieve an article abstract, metadata, or legal Europe PMC open full text for evidence analysis and citation.",
+  inputSchema: {
+    id: z.string().min(1).describe("Identifier returned by search, such as PMID:12345 or DOI:10.x/example"),
+  },
+  outputSchema: {
+    id: z.string(),
+    title: z.string(),
+    text: z.string(),
+    url: z.string(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  },
+  annotations: READ_ONLY,
+}, async ({ id }) => response(await chatGptFetch(id)));
 
 server.registerTool("search_literature", {
   title: "Search medical literature",
@@ -33,6 +73,7 @@ server.registerTool("search_literature", {
     study_types: z.array(z.string()).optional().describe("PubMed publication types, for example Randomized Controlled Trial"),
     include_trials: z.boolean().default(false),
   },
+  annotations: READ_ONLY,
 }, async (input) => response(await searchLiterature(input.query, {
   limit: input.limit,
   sources: input.sources,
@@ -48,6 +89,7 @@ server.registerTool("get_article", {
   inputSchema: {
     identifier: z.string().min(1).describe("PMID, DOI, or DOI URL"),
   },
+  annotations: READ_ONLY,
 }, async ({ identifier }) => {
   const doi = normalizeDoi(identifier);
   const isDoi = Boolean(doi && doi.includes("/"));
@@ -65,6 +107,7 @@ server.registerTool("resolve_open_fulltext", {
     doi: z.string().optional(),
     pmid: z.string().optional(),
   },
+  annotations: READ_ONLY,
 }, async (input) => response(await resolveOpenFullText(input)));
 
 server.registerTool("search_clinical_trials", {
@@ -74,6 +117,7 @@ server.registerTool("search_clinical_trials", {
     query: z.string().min(1),
     limit: z.number().int().min(1).max(100).default(10),
   },
+  annotations: READ_ONLY,
 }, async ({ query, limit }) => response(await searchClinicalTrials(query, { limit })));
 
 server.registerTool("chinese_search_portals", {
@@ -83,15 +127,17 @@ server.registerTool("chinese_search_portals", {
     query: z.string().min(1),
     include_authorized_gateway: z.boolean().default(false),
   },
+  annotations: READ_ONLY,
 }, async ({ query, include_authorized_gateway: includeGateway }) => response(chineseSearchPortals({ query, includeGateway })));
 
 server.registerTool("med_research_status", {
   title: "Medical research service status",
   description: "Report default sources, optional enhancements, and privacy behavior.",
   inputSchema: {},
+  annotations: READ_ONLY,
 }, async () => response({
   service: "med-research",
-  version: "0.1.0",
+  version: "0.2.0",
   default_sources: ["pubmed", "europepmc", "crossref", "clinicaltrials.gov"],
   optional_features: {
     unpaywall: Boolean(process.env.MED_RESEARCH_EMAIL),

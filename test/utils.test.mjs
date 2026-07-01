@@ -7,6 +7,7 @@ import { mapCrossref } from "../src/sources/crossref.mjs";
 import { mapClinicalTrial } from "../src/sources/clinicaltrials.mjs";
 import { mapOpenAlex } from "../src/sources/openalex.mjs";
 import { mapSemanticScholar } from "../src/sources/semanticscholar.mjs";
+import { toChatGptSearchResult } from "../src/chatgpt.mjs";
 
 test("normalizes DOI and title identifiers", () => {
   assert.equal(normalizeDoi("https://doi.org/10.1000/ABC.1."), "10.1000/abc.1");
@@ -72,4 +73,18 @@ test("maps optional OpenAlex and Semantic Scholar records", () => {
   const semantic = mapSemanticScholar({ paperId: "S1", title: "Study", year: 2025, externalIds: { DOI: "10.1/S2", PubMed: "7" }, authors: [{ name: "B" }] });
   assert.equal(openAlex.doi, "10.1/oa");
   assert.equal(semantic.pmid, "7");
+});
+
+test("maps literature records to ChatGPT citation results", () => {
+  assert.deepEqual(toChatGptSearchResult({
+    title: "Evidence review",
+    pmid: "123",
+    doi: "10.1/example",
+    url: "https://europepmc.org/article/MED/123",
+  }), {
+    id: "PMID:123",
+    title: "Evidence review",
+    url: "https://europepmc.org/article/MED/123",
+  });
+  assert.equal(toChatGptSearchResult({ title: "No URL" }), null);
 });

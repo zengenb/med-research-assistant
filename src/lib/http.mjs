@@ -64,6 +64,50 @@ export async function requestJson(url, options = {}) {
   throw lastError;
 }
 
+export async function requestText(url, options = {}) {
+  const {
+    headers = {},
+    timeoutMs = DEFAULT_TIMEOUT,
+    ttlMs = DEFAULT_TTL,
+    retries = 1,
+  } = options;
+  const key = `text:${url}`;
+  const cached = ttlMs > 0 ? cacheGet(key) : undefined;
+  if (cached !== undefined) return cached;
+
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        headers: {
+          accept: "text/plain, application/xml;q=0.9, text/xml;q=0.8",
+          "user-agent": "med-research-assistant/0.2.0 (+https://github.com/zengenb/med-research-assistant)",
+          ...headers,
+        },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const error = new Error(`HTTP ${response.status} from ${new URL(url).hostname}`);
+        error.status = response.status;
+        throw error;
+      }
+      const data = await response.text();
+      if (ttlMs > 0) cacheSet(key, data, ttlMs);
+      return data;
+    } catch (error) {
+      lastError = error;
+      const retryable = error.name === "AbortError" || error.status === 429 || error.status >= 500;
+      if (!retryable || attempt === retries) break;
+      await sleep(300 * 2 ** attempt);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastError;
+}
+
 export function clearHttpCache() {
   cache.clear();
 }

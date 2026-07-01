@@ -1,58 +1,61 @@
-# Medical Research Assistant
+# Medical Literature Research for ChatGPT
 
-Medical Research Assistant is a local MCP server and Codex plugin for reproducible medical-literature discovery. It searches several free scholarly services in parallel, merges duplicate records, records source failures, resolves legal open-access copies, and hands closed Chinese databases to an authorized browser workflow instead of storing credentials or bypassing access controls.
+A read-only ChatGPT data app for reproducible medical-literature discovery. It searches free scholarly services in parallel, deduplicates records, preserves source provenance, returns citable URLs, and retrieves legal Europe PMC open full text when available.
 
-## What works without paid API keys
+No paid literature API is required for the default sources:
 
-- PubMed metadata through NCBI E-utilities
-- Europe PMC metadata, abstracts, and open-access links
-- Crossref DOI and publication metadata
-- ClinicalTrials.gov study records
-- Chinese portal handoff for PubScholar, NSTL, SinoMed, Wanfang, CNKI, and an optional user-authorized gateway
+- PubMed / NCBI E-utilities
+- Europe PMC abstracts and open full text
+- Crossref DOI metadata
+- ClinicalTrials.gov
+- optional OpenAlex and Semantic Scholar coverage
+- safe browser handoff links for PubScholar, NSTL, SinoMed, Wanfang, and CNKI
 
-Optional free configuration enables Unpaywall (`MED_RESEARCH_EMAIL`), higher NCBI limits (`NCBI_API_KEY`), OpenAlex (`OPENALEX_API_KEY`), and higher Semantic Scholar limits (`SEMANTIC_SCHOLAR_API_KEY`). Add `openalex` or `semanticscholar` to the `sources` argument when you want those optional indexes.
+The project never stores literature-database usernames, passwords, cookies, or CAPTCHA answers and does not bypass paywalls.
 
-## MCP tools
+## ChatGPT-compatible tools
 
-- `search_literature`: federated, deduplicated literature search with a query audit
-- `get_article`: retrieve one article by PMID or DOI
-- `resolve_open_fulltext`: locate legal open-access copies
+- `search`: ChatGPT chat, deep research, and company-knowledge discovery schema
+- `fetch`: citable abstract, metadata, or legal Europe PMC open full text
+- `search_literature`: advanced multi-source search and source audit
+- `get_article`: retrieve a record by PMID or DOI
+- `resolve_open_fulltext`: resolve legal open-access copies
 - `search_clinical_trials`: search ClinicalTrials.gov
-- `chinese_search_portals`: prepare a safe handoff to Chinese discovery portals
-- `med_research_status`: report enabled sources and optional configuration
+- `chinese_search_portals`: generate authorized Chinese-database search handoffs
+- `med_research_status`: report sources and optional configuration
 
-## Local development
+Every tool is declared read-only. `search` and `fetch` include explicit output schemas and canonical URLs so ChatGPT can create citations.
+
+## Local validation
 
 ```powershell
-npm install
+npm ci
 npm test
 npm run check
-npm run smoke
 npm run smoke:mcp
+npm run smoke:chatgpt
 ```
 
-Run a direct search:
+## Connect to ChatGPT without making the server public
+
+ChatGPT cannot connect directly to a local stdio MCP server. Use OpenAI Secure MCP Tunnel:
+
+1. In ChatGPT, open **Settings → Apps → Advanced settings** and enable **Developer mode**.
+2. In OpenAI Platform tunnel settings, create a tunnel associated with the same ChatGPT workspace and obtain its `tunnel_id` and runtime API key.
+3. Download the official `openai/tunnel-client` release. Initialize a local stdio profile:
 
 ```powershell
-node src/cli.mjs search "physical restraint intensive care" --limit 5
+$env:CONTROL_PLANE_API_KEY="your-runtime-key"
+tunnel-client init --sample sample_mcp_stdio_local --profile med-research --tunnel-id tunnel_xxx --mcp-command "node C:\absolute\path\med-research-assistant\src\server.mjs"
+tunnel-client doctor --profile med-research --explain
+tunnel-client run --profile med-research
 ```
 
-Run the MCP server:
+4. Keep `tunnel-client run` active. In ChatGPT **Settings → Apps**, create an app named **Medical Literature Research**, choose **Tunnel** as the connection, and select that tunnel.
+5. Start a new chat, enable the app from the tools menu, and ask ChatGPT to use it.
 
-```powershell
-node src/server.mjs
-```
+Optional free configuration is documented in `.env.example`. It can enable Unpaywall, a higher NCBI rate limit, and additional indexes, but the default federated search works without those keys.
 
-Register it with Codex from an absolute checkout path:
+## Research cautions
 
-```powershell
-codex mcp add med-research -- node C:\absolute\path\to\med-research-assistant\src\server.mjs
-```
-
-The repository is also a Codex plugin. Its bundled `conduct-medical-research` skill enforces query planning, provenance, citation verification, and cautious use of authorized browser sessions.
-
-## Retrieval policy
-
-This project never embeds database usernames, passwords, cookies, or CAPTCHA solutions. It does not bypass paywalls. Links returned by Crossref are candidates, not proof of open access; `resolve_open_fulltext` uses Europe PMC and, when configured, Unpaywall to identify legal copies. Browser-only portals remain user-authorized, rate-limited fallbacks.
-
-Do not use generated synthesis as clinical advice. Verify decisions against primary literature, current guidelines, local policy, and qualified clinical judgment.
+Discovery results are not clinical recommendations. Verify study design, retraction status, full text, guidelines, applicability, and local policy before clinical or research use.
