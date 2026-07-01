@@ -1,0 +1,29 @@
+{
+  "name": "med-research-assistant",
+  "version": "0.2.0",
+  "description": "ChatGPT medical-literature app with free federated retrieval and legal open-full-text resolution.",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "author": "zengenb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zengenb/med-research-assistant.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "search": "node src/cli.mjs search",
+    "test": "node --test",
+    "check": "node scripts/check-syntax.mjs",
+    "smoke": "node scripts/live-smoke.mjs",
+    "smoke:mcp": "node scripts/mcp-smoke.mjs",
+    "smoke:chatgpt": "node scripts/chatgpt-smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  }
+}
