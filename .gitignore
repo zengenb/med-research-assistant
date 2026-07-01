@@ -1,0 +1,7 @@
+node_modules/
+.validator-venv/
+.env
+coverage/
+*.log
+.DS_Store
+Thumbs.db
