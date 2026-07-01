@@ -1,0 +1,39 @@
+{
+  "name": "med-research-assistant",
+  "version": "0.1.0",
+  "description": "Federated medical literature search and evidence-verification tools using free scholarly APIs and authorized browser fallbacks.",
+  "author": {
+    "name": "zengenb",
+    "url": "https://github.com/zengenb"
+  },
+  "homepage": "https://github.com/zengenb/med-research-assistant#readme",
+  "repository": "https://github.com/zengenb/med-research-assistant",
+  "license": "MIT",
+  "keywords": [
+    "medical-research",
+    "literature-search",
+    "pubmed",
+    "evidence",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Medical Research Assistant",
+    "shortDescription": "Search and verify medical literature without paid API keys.",
+    "longDescription": "Federated retrieval from free scholarly services, open-access resolution, clinical-trial search, Chinese-portal handoff, deduplication, and an auditable medical-evidence workflow.",
+    "developerName": "zengenb",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://github.com/zengenb/med-research-assistant",
+    "defaultPrompt": [
+      "Search current medical evidence for this clinical research question.",
+      "Build a PICO search strategy and verify every citation.",
+      "Find open full text for these DOI or PMID identifiers."
+    ],
+    "brandColor": "#0F766E"
+  }
+}

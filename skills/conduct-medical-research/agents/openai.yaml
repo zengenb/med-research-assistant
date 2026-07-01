@@ -1,0 +1,4 @@
+interface:
+  display_name: "Medical Research"
+  short_description: "Search, verify, and synthesize medical evidence"
+  default_prompt: "Use $conduct-medical-research to find and verify current medical evidence for my question."
